@@ -1,7 +1,5 @@
 #include "./main.h"
 
-WS2812_t color;
-
 void setup()
 {
     WS2812_InitPro();
