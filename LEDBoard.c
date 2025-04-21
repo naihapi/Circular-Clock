@@ -1,7 +1,8 @@
 #include "LEDBoard.h"
 
-WS2812_t WSBoard[8][24];
+WS2812_t WSBoard[8][24]; // 灯板缓冲数组
 
+// 灯板数字
 uint8_t LEDBoard_Number[10][3] = {
     {0x1F, 0x11, 0x1F}, // 0
     {0x00, 0x00, 0x1F}, // 1
@@ -15,10 +16,12 @@ uint8_t LEDBoard_Number[10][3] = {
     {0x17, 0x15, 0x1F}, // 9
 };
 
+// 灯板冒号
 uint8_t LEDBoard_Colon[] = {
     0x00, 0x0A, 0x00 // ':'
 };
 
+// 灯板分割点
 uint8_t LEDBoard_Point[] = {
     0x00, 0x04, 0x00 // '.'
 };
