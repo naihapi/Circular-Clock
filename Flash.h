@@ -1,5 +1,6 @@
 #pragma once
 
+// 官方库
 #include <lwip/ip_addr.h>
 #include <lwip/opt.h>
 #include <Arduino.h>
@@ -8,12 +9,25 @@
 #include <WiFiUdp.h>
 #include <PubSubClient.h>
 #include <Adafruit_NeoPixel.h>
+#include <EEPROM.h>
+
+// 闪存地址
+#define FLASH_ADDR_CONFIGSTATE 0x00
+#define FLASH_ADDR_WIFI_APSSID 0x01
+#define FLASH_ADDR_WIFI_APPWD 0x21
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
     // 声明C兼容的函数（不能有C++特性）
+    extern uint8_t Flash_ConfigState;
+    extern char Flash_WiFi_APSSID[32];
+    extern char Flash_WiFi_APPWD[32];
+    extern char Flash_WiFi_TOKEN[64];
+    void Flash_Load(void);
+    void Flash_Update(void);
+
 #ifdef __cplusplus
 }
 #endif

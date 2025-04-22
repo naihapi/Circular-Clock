@@ -13,6 +13,7 @@
 #include "./WS2812.h"
 #include "./LEDBoard.h"
 #include "./Connect.h"
+#include "./USART.h"
 
 // 软件
 //...

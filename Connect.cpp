@@ -1,37 +1,108 @@
 #include "Connect.h"
 
-SoftAP_t MySoftAP;
-WiFiUDP MyUdp;
+char Connect_ProductId[] = "CircularClock004";
+char Connect_DeviceType[] = "004";
+char Connect_DeviceName[] = "圆色时钟";
+char Connect_Version[] = "1";
+WiFiUDP MyUDP;
 
-uint8_t Connect_WiFi_GetState(void)
+/**
+ * @brief  AP配网
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void Connect_APLink(void)
 {
-    return 0;
-}
+    Serial.println("APLink Start, Waiting Connect...");
 
-void Connect_WiFi_GetIP(uint8_t *ip)
-{
-}
+    WiFi.softAP("bemfa_CircularClock");
+    MyUDP.begin(8266); // 监听8266端口
+    while (1)
+    {
+        char PacketBuffer[255];
+        uint8_t Length = 0;
 
-void Connect_WiFi_STAConfig(uint8_t *name, uint8_t *pwd) {}
+        // 接收UDP数据包
+        int PackSize = MyUDP.parsePacket();
 
-void Connect_WiFi_APConfig(uint8_t *name, uint8_t *pwd, uint8_t channel, uint8_t hidden, uint8_t max_conn, uint32_t localport)
-{
-    WiFi.disconnect();
+        if (PackSize)
+        {
+            IPAddress RemoteIP = MyUDP.remoteIP();
+            uint16_t Port = MyUDP.remotePort();
 
-    MySoftAP.ssid = name;
-    MySoftAP.pwd = pwd;
-    MySoftAP.channel = channel;
-    MySoftAP.hidden = hidden;
-    MySoftAP.max_conn = max_conn;
-    MySoftAP.localport = localport;
+            Serial.printf("Received Packet: %d Bytes\n", PackSize);
+            Serial.printf("Remote IP: %s\n", RemoteIP.toString().c_str());
+            Serial.printf("Remote Port: %u\n", Port);
 
-    WiFi.softAP(MySoftAP.ssid, MySoftAP.pwd, MySoftAP.channel, MySoftAP.hidden, MySoftAP.max_conn, MySoftAP.interval);
-}
+            // 读取数据内容
+            Length = MyUDP.read(PacketBuffer, 255);
+            if (Length > 0)
+            {
+                PacketBuffer[Length] = '\0';
+            }
 
-void Connect_WiFi_ModeConfig(WiFiMode_t mode)
-{
+            Serial.printf("Rec-Data: %s\n", PacketBuffer);
+
+            // 解析JSON数据
+            StaticJsonDocument<200> Doc;
+            DeserializationError Err = deserializeJson(Doc, PacketBuffer);
+            if (Err)
+            {
+                Serial.printf("Parse-Json Failed: %s\n", Err.c_str());
+                return;
+            }
+
+            // 处理命令类型
+            int cmdType = Doc["cmdType"].as<int>();
+            if (cmdType == 1)
+            {
+                // 提取配网信息
+                const char *ssid = Doc["ssid"];
+                const char *password = Doc["password"];
+                const char *token = Doc["token"];
+
+                Serial.printf("CMD Type: %d\n", cmdType);
+                Serial.printf("SSID: %s\n", ssid);
+                Serial.printf("Password: %s\n", password);
+                Serial.printf("Token: %s\n", token);
+
+                // 保存配置
+                strcpy(Flash_WiFi_APSSID, ssid);
+                strcpy(Flash_WiFi_APPWD, password);
+                strcpy(Flash_WiFi_TOKEN, token);
+                Flash_Update();
+
+                // 构造回复信息
+                String ReplyBuffer = "{\"cmdType\":2,\"productId\":\"" + String(Connect_ProductId) +
+                                     "\",\"deviceName\":\"" + String(Connect_DeviceName) +
+                                     "\",\"protoVersion\":\"" + String(Connect_Version) + "\"}";
+
+                // 发送回复
+                MyUDP.beginPacket(RemoteIP, Port);
+                MyUDP.write(ReplyBuffer.c_str());
+                MyUDP.endPacket();
+            }
+            else if (cmdType == 3)
+            {
+                // 结束配网模式
+                WiFi.softAPdisconnect(true);
+                Serial.println("AP Link Finished!");
+
+                return;
+            }
+        }
+    }
 }
 
 void Connect_InitPro(void)
 {
+    Flash_Load();
+
+    if (Flash_ConfigState == 0)
+    {
+    }
 }
