@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
+
+// 引脚和灯珠数量
 #define WS2812_PIN D2
 #define WS2812_NUM 192
 
