@@ -1,9 +1,10 @@
 #include "Connect.h"
 
-char Connect_ProductId[] = "CircularClock004";
-char Connect_DeviceType[] = "004";
-char Connect_DeviceName[] = "圆色时钟";
-char Connect_Version[] = "1";
+char Connect_ProductId[] = "CircularClock004"; // 产品ID
+char Connect_DeviceType[] = "004";             // 设备类型
+char Connect_DeviceName[] = "圆色时钟";        // 设备名称
+char Connect_Version[] = "1";                  // 版本号
+uint8_t Connect_ResetFlag = 0;                 // 设备重置标志
 WiFiUDP MyUDP;
 
 /**
@@ -92,17 +93,52 @@ void Connect_APLink(void)
                 WiFi.softAPdisconnect(true);
                 Serial.println("AP Link Finished!");
 
+                Flash_ConfigState = 1;
                 return;
             }
         }
     }
 }
 
+/**
+ * @brief  重置设备
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void Connect_ResetDevice(void)
+{
+    Serial.printf("Device-RESET:Start\n");
+
+    Serial.printf("Device-RESET:Clear Flash Data\n");
+    strcpy(Flash_WiFi_APSSID, "WiFi-NAME");
+    strcpy(Flash_WiFi_APPWD, "WiFi-PWD");
+    strcpy(Flash_WiFi_TOKEN, "TOKEN");
+    Flash_ConfigState = 0;
+
+    Serial.printf("Device-RESET:Flash Update Data\n");
+    Flash_Update();
+
+    Serial.printf("Device-RESET:Restart Finished\n\n");
+    Connect_APLink();
+}
+
+/**
+ * @brief  AP配网
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
 void Connect_InitPro(void)
 {
-    Flash_Load();
-
     if (Flash_ConfigState == 0)
     {
+        Connect_APLink();
     }
 }

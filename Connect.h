@@ -24,6 +24,7 @@ extern "C"
     // 声明C兼容的函数（不能有C++特性）
     void Connect_InitPro(void);
     void Connect_APLink(void);
+    void Connect_ResetDevice(void);
 
 #ifdef __cplusplus
 }

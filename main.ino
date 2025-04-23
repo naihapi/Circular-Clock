@@ -2,10 +2,10 @@
 
 void setup()
 {
-    // USART_InitPro();
-    // Flash_InitPro();
+    USART_InitPro();
+    Flash_InitPro();
     WS2812_InitPro();
-    // Connect_InitPro();
+    Connect_InitPro();
 
     // Connect_APLink();
 
@@ -13,6 +13,8 @@ void setup()
     LEDBoard_DisplayPoint(DarkOrange);
     LEDBoard_DisplayMonth(10, Yellow);
     LEDBoard_DisplayDay(24, Yellow);
+
+    LEDBoard_Update();
 }
 
 void loop()
