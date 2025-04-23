@@ -27,6 +27,7 @@ extern "C"
     extern char Flash_WiFi_TOKEN[64];
     void Flash_Load(void);
     void Flash_Update(void);
+    void Flash_InitPro(void);
 
 #ifdef __cplusplus
 }
