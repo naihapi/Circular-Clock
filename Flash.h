@@ -15,6 +15,7 @@
 #define FLASH_ADDR_CONFIGSTATE 0x00
 #define FLASH_ADDR_WIFI_APSSID 0x01
 #define FLASH_ADDR_WIFI_APPWD 0x21
+#define FLASH_ADDR_WIFI_TOKEN 0x41
 
 #ifdef __cplusplus
 extern "C"

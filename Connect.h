@@ -1,5 +1,7 @@
 #pragma once
 
+/*由于ESP8266WiFi为C++库，所以需要声明为C兼容*/
+
 // 官方库
 #include <lwip/ip_addr.h>
 #include <lwip/opt.h>
@@ -12,7 +14,7 @@
 #include <ArduinoJson.h>
 
 // 宏定义
-//...
+#define CONNECT_PIN D1
 
 // 自定义
 #include "Flash.h"

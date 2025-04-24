@@ -27,6 +27,11 @@ void Flash_Load(void)
     {
         Flash_WiFi_APPWD[i] = EEPROM.read(FLASH_ADDR_WIFI_APPWD + i);
     }
+
+    for (uint8_t i = 0; i < 64; i++)
+    {
+        Flash_WiFi_TOKEN[i] = EEPROM.read(FLASH_ADDR_WIFI_TOKEN + i);
+    }
 }
 
 /**
@@ -50,6 +55,11 @@ void Flash_Update(void)
     for (uint8_t i = 0; i < 32; i++)
     {
         EEPROM.write(FLASH_ADDR_WIFI_APPWD + i, Flash_WiFi_APPWD[i]);
+    }
+
+    for (uint8_t i = 0; i < 64; i++)
+    {
+        EEPROM.write(FLASH_ADDR_WIFI_TOKEN + i, Flash_WiFi_TOKEN[i]);
     }
 
     EEPROM.commit();
