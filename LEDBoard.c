@@ -139,16 +139,16 @@ uint8_t *LEDBoard_GetNumberPointer(uint8_t number)
  * @param img 图片
  * @param color 颜色
  *
- * @retval 返回数字的第1个字节
+ * @retval 无
  *
- * @note 数字尺寸：3*5
+ * @note 列行式绘制，仅适用于列不超过8位的图片
  */
 void LEDBoard_DrawImg(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *img, WS2812_t color)
 {
-    // 列
+    // 列(按像素)
     for (uint8_t col = 0; col < width; col++)
     {
-        // 行
+        // 行(按字节)
         for (uint8_t row = 0; row < 8; row++)
         {
             if (x + col >= 24 || y + row >= 8)
@@ -159,6 +159,53 @@ void LEDBoard_DrawImg(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8
             if (bit)
             {
                 LEDBoard_SetPixel(x + col, y + row, color);
+            }
+        }
+    }
+}
+
+/**
+ * @brief  绘制一张图片
+ *
+ * @param x x轴
+ * @param y y轴
+ * @param width 宽度
+ * @param height 高度
+ * @param img 图片
+ * @param color 颜色
+ *
+ * @retval 返回数字的第1个字节
+ *
+ * @note 适用于多位的图片
+ * @note 逐列式绘制，工具取模时低位优先
+ */
+void LEDBoard_DrawImg_Beta(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *img, WS2812_t color)
+{
+    uint8_t LargeRow = (height + 7) / 8; // 1列的共计字节
+
+    // 列（按像素）
+    for (uint8_t col = 0; col < width; col++)
+    {
+        // 行（按像素）
+        for (uint8_t row = 0; row < height; row++)
+        {
+            // 实际坐标
+            uint8_t Real_X = x + col;
+            uint8_t Real_Y = y + row;
+
+            // 溢出处理（宽24高8的溢出处理）
+            if (x + col >= 24 || y + row >= 8)
+                continue;
+
+            uint8_t CurrentByte = row / 8;  // 当前列的第CurrentByte个字节
+            uint8_t CurrentPixel = row % 8; // CurrentByte个字节内的第CurrentPixel个像素
+
+            uint8_t ImgByte = img[col * LargeRow + CurrentByte]; // 获取当前列的字节（通过共计字节、当前列获取首字节，再使用当前字节个数获取偏移字节）
+            uint8_t ImgPixel = (ImgByte >> CurrentPixel) & 0x01; //  获取当前像素值
+
+            if (ImgPixel)
+            {
+                LEDBoard_SetPixel(Real_X, Real_Y, color);
             }
         }
     }

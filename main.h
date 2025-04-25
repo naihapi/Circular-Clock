@@ -14,6 +14,7 @@
 #include "./LEDBoard.h"
 #include "./Connect.h"
 #include "./USART.h"
+#include "./RTC.h"
 
 // 软件
 //...
