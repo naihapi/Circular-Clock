@@ -49,7 +49,7 @@ void RTC_Function(void)
         // 改变灯板数值
         //...
 
-        Serial.printf("Date:20%d-%d-%d\n", CurrentTIME.year, CurrentTIME.month, CurrentTIME.day);
+        Serial.printf("Date:%d-%d-%d\n", CurrentTIME.year, CurrentTIME.month, CurrentTIME.day);
         Serial.printf("Time:%d-%d-%d\n", CurrentTIME.hour, CurrentTIME.minute, CurrentTIME.second);
     }
 }

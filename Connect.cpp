@@ -1,14 +1,20 @@
 #include "Connect.h"
 
-Ticker TIM;
-uint8_t Connect_KEYCount = 0;                  // 按键计数(用于重置设备)
-uint8_t Connect_TIMCount = 0;                  // 定时器计数(用于重置设备)
-char Connect_ProductId[] = "CircularClock004"; // 产品ID
-char Connect_DeviceType[] = "004";             // 设备类型
+Ticker TIM;                    // 定时器对象(用于重置设备)
+Ticker TIM_WiFiCollection;     // 定时器对象(用于WiFi监测)
+uint8_t Connect_KEYCount = 0;  // 按键计数(用于重置设备)
+uint8_t Connect_TIMCount = 0;  // 定时器计数(用于重置设备)
+uint8_t Connect_ResetFlag = 0; // 设备重置标志
+
+char Connect_ProductId[] = "CircularClock006"; // 产品ID
+char Connect_DeviceType[] = "006";             // 设备类型(开关设备)
 char Connect_DeviceName[] = "圆色时钟";        // 设备名称
 char Connect_Version[] = "1";                  // 版本号
-uint8_t Connect_ResetFlag = 0;                 // 设备重置标志
-WiFiUDP MyUDP;
+
+WiFiUDP MyUDP;                      // UDP对象
+WiFiClient MyClient;                // 创建WiFi客户端对象
+PubSubClient MyPSC(MyClient);       // 继承客户端对象
+uint8_t Connect_CloudLink_Flag = 0; // 云端连接标志(0：未连接，1：已连接)
 
 /**
  * @brief  AP配网
@@ -178,7 +184,6 @@ IRAM_ATTR void D1_INTHandler()
 {
     if (digitalRead(CONNECT_PIN) == LOW)
     {
-        delay(20);
         if (digitalRead(CONNECT_PIN) == LOW)
         {
             if (Connect_TIMCount == 0)
@@ -201,12 +206,105 @@ IRAM_ATTR void D1_INTHandler()
  *
  * @retval 无
  *
- * @note 无
+ * @note 上拉+下降沿触发
  */
 void Connect_KEY_Init(void)
 {
     pinMode(CONNECT_PIN, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(CONNECT_PIN), D1_INTHandler, FALLING);
+}
+
+/**
+ * @brief  WiFi连接
+ *
+ * @param ssid 名称
+ * @param pwd 密码
+ * @param time_out 超时次数(1s/次)
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out)
+{
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    WiFi.begin(ssid, pwd);
+
+    Serial.printf("WiFi Connecting");
+    while (1)
+    {
+        if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != INADDR_NONE)
+        {
+            Serial.printf("\nWiFi Connected! IP: %s\n", WiFi.localIP().toString().c_str());
+            break;
+        }
+        delay(1000);
+        Serial.printf(".");
+
+        if (time_out-- == 0)
+        {
+            Serial.printf("\nWiFi Connect Failed,Restart!\n");
+            ESP.restart();
+        }
+    }
+}
+
+/**
+ * @brief  连接到云平台
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void Connect_Cloud_Link(void)
+{
+    Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10);
+
+    // 存在密钥时，连接到云平台
+    MyPSC.setServer(CONNECT_CLOUD_URL, CONNECT_CLOUD_PORT);
+    if (MyPSC.connect(Flash_WiFi_TOKEN))
+    {
+        MyPSC.subscribe(Connect_ProductId);
+        MyPSC.publish(Connect_ProductId, "Device Online");
+        Serial.printf("Cloud Link Success!\n");
+    }
+    else
+    {
+        Serial.printf("Cloud Link Failed!\n");
+    }
+}
+
+/**
+ * @brief 定时器服务函数
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note WiFi+MQTT监测
+ */
+void TIM_WiFiCollection_Handler(void)
+{
+    if (WiFi.status() != WL_CONNECTED || WiFi.localIP() == INADDR_NONE && Connect_CloudLink_Flag == 0)
+    {
+        Connect_CloudLink_Flag = 1;
+    }
+
+    if (Connect_CloudLink_Flag == 1)
+    {
+        Serial.printf("WiFi Disconnect,Retry...\n");
+        WiFi.disconnect();
+        WiFi.begin(Flash_WiFi_APSSID, Flash_WiFi_APPWD);
+
+        if (MyPSC.connect(Flash_WiFi_TOKEN))
+        {
+            MyPSC.publish(Connect_ProductId, "Device Online");
+            Connect_CloudLink_Flag = 0;
+        }
+    }
 }
 
 /**
@@ -220,10 +318,13 @@ void Connect_KEY_Init(void)
  */
 void Connect_InitPro(void)
 {
+    // 无配置信息，进入配网模式
     if (Flash_ConfigState == 0)
     {
         Connect_APLink();
     }
 
-    Connect_KEY_Init();
+    Connect_KEY_Init();   // 按键初始化
+    Connect_Cloud_Link(); // 连接到云平台
+    TIM_WiFiCollection.attach(10, TIM_WiFiCollection_Handler);
 }

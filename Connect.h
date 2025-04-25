@@ -15,6 +15,8 @@
 
 // 宏定义
 #define CONNECT_PIN D1
+#define CONNECT_CLOUD_URL "bemfa.com"
+#define CONNECT_CLOUD_PORT 9501
 
 // 自定义
 #include "Flash.h"

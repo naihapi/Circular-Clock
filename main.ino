@@ -19,5 +19,5 @@ void setup()
 void loop()
 {
     RTC_Function();
-    delay(500);
+    delay(5000);
 }

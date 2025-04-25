@@ -28,6 +28,7 @@ extern "C"
     void LEDBoard_DisplayMonth(uint8_t month, uint32_t color);
     void LEDBoard_DisplayDay(uint8_t day, uint32_t color);
     void LEDBoard_DisplayPoint(uint32_t color);
+    void LEDBoard_DrawImg_Beta(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *img, WS2812_t color);
 
 #ifdef __cplusplus
 }
