@@ -16,7 +16,8 @@
 // 宏定义
 #define CONNECT_PIN D1
 #define CONNECT_CLOUD_URL "bemfa.com"
-#define CONNECT_CLOUD_PORT 9501
+#define CONNECT_CLOUD_PORT 9501    // 此为MQTT端口
+#define CONNECT_CLOUD_TCPPORT 8344 // 此为TCP端口
 
 // 自定义
 #include "Flash.h"
@@ -29,6 +30,7 @@ extern "C"
     void Connect_InitPro(void);
     void Connect_APLink(void);
     void Connect_ResetDevice(void);
+    void Connect_Function(void);
 
 #ifdef __cplusplus
 }
