@@ -25,6 +25,7 @@ extern uint32_t Connect_UNIXTime;
 
 // 自定义
 #include "Flash.h"
+#include "RTC.h"
 
 #ifdef __cplusplus
 extern "C"

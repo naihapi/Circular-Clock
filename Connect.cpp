@@ -221,7 +221,7 @@ void Connect_KEY_Init(void)
  *
  * @param ssid 名称
  * @param pwd 密码
- * @param time_out 超时次数(1s/次)
+ * @param time_out 超时次数(500ms/次)
  * @param restart_flag 重启标志(1重启，0不重启)
  * @retval 无
  *
@@ -241,16 +241,19 @@ void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out, uint8_t restart_f
             Serial.printf("\nWiFi Connected! IP: %s\n", WiFi.localIP().toString().c_str());
             break;
         }
-        delay(1000);
+        delay(500);
         Serial.printf(".");
 
         if (time_out-- == 0)
         {
             Serial.printf("\nWiFi Connect Failed!\n");
+
             if (restart_flag == 1)
             {
                 ESP.restart();
             }
+
+            return;
         }
     }
 }
@@ -317,7 +320,7 @@ void TIM_WiFiCollection_Handler(void)
  *
  * @retval 无
  *
- * @note 使用TCP协议获取时间戳
+ * @note 使用TCP协议获取时间戳(TCP和MQTT协议不能同时使用)
  * @note 时间戳获取到Connect_UNIXTime变量中
  */
 void Connect_GetTimestamp(uint8_t retry)
@@ -326,7 +329,7 @@ void Connect_GetTimestamp(uint8_t retry)
     char *p;
 
     Serial.printf("TCP Connect\n");
-    while (--retry != 0)
+    while (1)
     {
         if (MyClient.connect(CONNECT_CLOUD_URL, CONNECT_CLOUD_TCPPORT))
         {
@@ -335,7 +338,12 @@ void Connect_GetTimestamp(uint8_t retry)
         }
 
         Serial.printf("TCP Connect Failed,Retry...\n");
-        delay(1000);
+        delay(500);
+
+        if (retry-- == 0)
+        {
+            return;
+        }
     }
 
     while (Connect_UNIXTime == 0)
@@ -390,19 +398,22 @@ void Connect_Cloud_Callback(char *topic, byte *payload, unsigned int length)
  *
  * @retval 无
  *
- * @note 无
+ * @note 仅在秒数阈值内时，进行重连
  */
 void Connect_Function(void)
 {
-    if (Connect_CloudLink_Flag == 1)
+    if (Connect_CloudLink_Flag == 1 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] < 30 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] > 5)
     {
         Serial.printf("WiFi Disconnect,Retry...\n");
 
-        Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0);
+        Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0); // 可重试时间5s
 
         if (Connect_Cloud_Link() == 1)
         {
-            Connect_CloudLink_Flag = 0;
+            if (Connect_Cloud_Link() == 1)
+            {
+                Connect_CloudLink_Flag = 0;
+            }
         }
     }
 }
@@ -426,11 +437,12 @@ void Connect_InitPro(void)
 
     Connect_KEY_Init(); // 按键初始化
 
-    Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 1); // 连接WiFi
-    Connect_Cloud_Link();                                         // 连接到云平台
+    Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0); // 连接WiFi
 
     MyPSC.setCallback(Connect_Cloud_Callback); // 创建接收回调函数
-    Connect_GetTimestamp(5);                   // 获取时间戳
+    Connect_GetTimestamp(3);                   // 获取时间戳
+
+    Connect_Cloud_Link(); // 连接到云平台
 
     TIM_WiFiCollection.attach(5, TIM_WiFiCollection_Handler);
 }
