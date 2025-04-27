@@ -18,5 +18,8 @@ void setup()
 
 void loop()
 {
+    RTC_Function();
     Connect_Function();
+
+    delay(1000);
 }

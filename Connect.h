@@ -12,12 +12,16 @@
 #include <PubSubClient.h>
 #include <Adafruit_NeoPixel.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 // 宏定义
 #define CONNECT_PIN D1
 #define CONNECT_CLOUD_URL "bemfa.com"
 #define CONNECT_CLOUD_PORT 9501    // 此为MQTT端口
 #define CONNECT_CLOUD_TCPPORT 8344 // 此为TCP端口
+
+// 变量
+extern uint32_t Connect_UNIXTime;
 
 // 自定义
 #include "Flash.h"

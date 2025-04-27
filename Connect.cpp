@@ -318,6 +318,7 @@ void TIM_WiFiCollection_Handler(void)
  * @retval 无
  *
  * @note 使用TCP协议获取时间戳
+ * @note 时间戳获取到Connect_UNIXTime变量中
  */
 void Connect_GetTimestamp(uint8_t retry)
 {
