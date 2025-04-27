@@ -22,6 +22,7 @@
 extern "C"
 {
 #endif
+    extern uint8_t RTC_DataBuffer[6];
     void RTC_InitPro(void);
     void RTC_Function(void);
 #ifdef __cplusplus
