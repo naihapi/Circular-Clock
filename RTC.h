@@ -8,6 +8,7 @@
 // 自定义库
 #include "Connect.h"
 
+// 宏定义
 #define RTC_PIN_SCL D3
 #define RTC_PIN_SDA D4
 #define RTC_PIN_CE D5

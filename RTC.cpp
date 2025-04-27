@@ -11,7 +11,7 @@ uint8_t RTC_DataBuffer[6];                          // 数据存储(RTC_DATABUFF
  *
  * @retval 无
  *
- * @note 无
+ * @note 默认24小时制
  */
 void RTC_TimeInit(time_t unix)
 {
