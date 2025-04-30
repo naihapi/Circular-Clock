@@ -7,13 +7,14 @@ uint8_t RTC_DataBuffer[6];                          // 数据存储(RTC_DATABUFF
 /**
  * @brief  外部时钟初始化
  *
- * @param 无
+ * @param unix 解析时间戳
+ * @param update RTC是否更新(0：更新，1：不更新)
  *
  * @retval 无
  *
  * @note 默认24小时制
  */
-void RTC_TimeInit(time_t unix)
+void RTC_TimeInit(time_t unix, uint8_t update)
 {
     setenv("TZ", "CST-8", 1); // CST = China Standard Time (UTC+8)
     tzset();                  // 应用时区设置
@@ -36,92 +37,91 @@ void RTC_TimeInit(time_t unix)
 
     Serial.printf("%d-%d-%d %d:%d:%d\n", year, month, day, hour, minute, second);
 
-    // 检查 RTC 是否停止
-    if (MyRTC.isHalted())
+    // 转换星期为 Ds1302 的枚举格式（假设 tm_wday=0 是周日）
+    Ds1302::DOW dow;
+    switch (wday)
     {
-        // 转换星期为 Ds1302 的枚举格式（假设 tm_wday=0 是周日）
-        Ds1302::DOW dow;
-        switch (wday)
-        {
-        case 0:
-            dow = Ds1302::DOW_SUN;
-            break;
-        case 1:
-            dow = Ds1302::DOW_MON;
-            break;
-        case 2:
-            dow = Ds1302::DOW_TUE;
-            break;
-        case 3:
-            dow = Ds1302::DOW_WED;
-            break;
-        case 4:
-            dow = Ds1302::DOW_THU;
-            break;
-        case 5:
-            dow = Ds1302::DOW_FRI;
-            break;
-        case 6:
-            dow = Ds1302::DOW_SAT;
-            break;
-        default:
-            dow = Ds1302::DOW_MON; // 默认周一
-        }
+    case 0:
+        dow = Ds1302::DOW_SUN;
+        break;
+    case 1:
+        dow = Ds1302::DOW_MON;
+        break;
+    case 2:
+        dow = Ds1302::DOW_TUE;
+        break;
+    case 3:
+        dow = Ds1302::DOW_WED;
+        break;
+    case 4:
+        dow = Ds1302::DOW_THU;
+        break;
+    case 5:
+        dow = Ds1302::DOW_FRI;
+        break;
+    case 6:
+        dow = Ds1302::DOW_SAT;
+        break;
+    default:
+        dow = Ds1302::DOW_MON; // 默认周一
+    }
 
-        // 转换月份为 Ds1302 的枚举格式
-        Ds1302::MONTH rtc_month;
-        switch (month)
-        {
-        case 1:
-            rtc_month = Ds1302::MONTH_JAN;
-            break;
-        case 2:
-            rtc_month = Ds1302::MONTH_FEB;
-            break;
-        case 3:
-            rtc_month = Ds1302::MONTH_MAR;
-            break;
-        case 4:
-            rtc_month = Ds1302::MONTH_APR;
-            break;
-        case 5:
-            rtc_month = Ds1302::MONTH_MAY;
-            break;
-        case 6:
-            rtc_month = Ds1302::MONTH_JUN;
-            break;
-        case 7:
-            rtc_month = Ds1302::MONTH_JUL;
-            break;
-        case 8:
-            rtc_month = Ds1302::MONTH_AUG;
-            break;
-        case 9:
-            rtc_month = Ds1302::MONTH_SEP;
-            break;
-        case 10:
-            rtc_month = Ds1302::MONTH_OCT;
-            break;
-        case 11:
-            rtc_month = Ds1302::MONTH_NOV;
-            break;
-        case 12:
-            rtc_month = Ds1302::MONTH_DEC;
-            break;
-        default:
-            rtc_month = Ds1302::MONTH_JAN; // 默认一月
-        }
+    // 转换月份为 Ds1302 的枚举格式
+    Ds1302::MONTH rtc_month;
+    switch (month)
+    {
+    case 1:
+        rtc_month = Ds1302::MONTH_JAN;
+        break;
+    case 2:
+        rtc_month = Ds1302::MONTH_FEB;
+        break;
+    case 3:
+        rtc_month = Ds1302::MONTH_MAR;
+        break;
+    case 4:
+        rtc_month = Ds1302::MONTH_APR;
+        break;
+    case 5:
+        rtc_month = Ds1302::MONTH_MAY;
+        break;
+    case 6:
+        rtc_month = Ds1302::MONTH_JUN;
+        break;
+    case 7:
+        rtc_month = Ds1302::MONTH_JUL;
+        break;
+    case 8:
+        rtc_month = Ds1302::MONTH_AUG;
+        break;
+    case 9:
+        rtc_month = Ds1302::MONTH_SEP;
+        break;
+    case 10:
+        rtc_month = Ds1302::MONTH_OCT;
+        break;
+    case 11:
+        rtc_month = Ds1302::MONTH_NOV;
+        break;
+    case 12:
+        rtc_month = Ds1302::MONTH_DEC;
+        break;
+    default:
+        rtc_month = Ds1302::MONTH_JAN; // 默认一月
+    }
 
-        // 设置 RTC 时间
-        Ds1302::DateTime DT = {
-            .year = static_cast<uint8_t>(year % 100), // 取后两位（如 24）
-            .month = rtc_month,
-            .day = static_cast<uint8_t>(day),
-            .hour = static_cast<uint8_t>(hour),
-            .minute = static_cast<uint8_t>(minute),
-            .second = static_cast<uint8_t>(second),
-            .dow = dow};
+    // 设置 RTC 时间
+    Ds1302::DateTime DT = {
+        .year = static_cast<uint8_t>(year % 100), // 取后两位（如 24）
+        .month = rtc_month,
+        .day = static_cast<uint8_t>(day),
+        .hour = static_cast<uint8_t>(hour),
+        .minute = static_cast<uint8_t>(minute),
+        .second = static_cast<uint8_t>(second),
+        .dow = dow};
 
+    if (update == 1)
+    {
         MyRTC.setDateTime(&DT);
         Serial.println("RTC 时间已更新！");
     }
@@ -168,5 +168,9 @@ void RTC_Function(void)
 void RTC_InitPro(void)
 {
     MyRTC.init();
-    RTC_TimeInit(Connect_UNIXTime);
+
+    if (Connect_State == 1)
+        RTC_TimeInit(Connect_UNIXTime, 1);
+    else
+        RTC_TimeInit(Connect_UNIXTime, 0);
 }

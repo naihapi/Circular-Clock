@@ -22,6 +22,7 @@
 
 // 变量
 extern uint32_t Connect_UNIXTime;
+extern uint8_t Connect_State;
 
 // 自定义
 #include "Flash.h"

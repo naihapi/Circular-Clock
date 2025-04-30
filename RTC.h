@@ -26,6 +26,7 @@ extern "C"
     extern uint8_t RTC_DataBuffer[6];
     void RTC_InitPro(void);
     void RTC_Function(void);
+    void RTC_TimeInit(time_t unix, uint8_t update);
 #ifdef __cplusplus
 }
 #endif

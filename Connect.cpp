@@ -16,7 +16,8 @@ WiFiClient MyClient;                // 创建WiFi客户端对象
 PubSubClient MyPSC(MyClient);       // 继承客户端对象
 uint8_t Connect_CloudLink_Flag = 0; // 云端连接标志(0：未连接，1：已连接)
 char Connect_RecBuffer[255];        // 接收缓冲区
-uint32_t Connect_UNIXTime = 0;
+uint32_t Connect_UNIXTime = 0;      // UNIX时间戳
+uint8_t Connect_State = 0;          // 当前连接状态
 
 /**
  * @brief  AP配网
@@ -238,6 +239,7 @@ void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out, uint8_t restart_f
     {
         if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != INADDR_NONE)
         {
+            Connect_State = 1;
             Serial.printf("\nWiFi Connected! IP: %s\n", WiFi.localIP().toString().c_str());
             break;
         }
@@ -247,6 +249,7 @@ void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out, uint8_t restart_f
         if (time_out-- == 0)
         {
             Serial.printf("\nWiFi Connect Failed!\n");
+            Connect_State = 0;
 
             if (restart_flag == 1)
             {
@@ -316,19 +319,19 @@ void TIM_WiFiCollection_Handler(void)
 /**
  * @brief 获取时间戳
  *
- * @param retry 重试次数
+ * @param retry 重试次数(500ms/次)
  *
- * @retval 无
+ * @retval 返回是否成功(1：成功，0：失败)
  *
  * @note 使用TCP协议获取时间戳(TCP和MQTT协议不能同时使用)
  * @note 时间戳获取到Connect_UNIXTime变量中
  */
-void Connect_GetTimestamp(uint8_t retry)
+uint8_t Connect_GetTimestamp(uint8_t retry)
 {
     char str[256];
     char *p;
+    uint8_t flag = 0;
 
-    Serial.printf("TCP Connect\n");
     while (1)
     {
         if (MyClient.connect(CONNECT_CLOUD_URL, CONNECT_CLOUD_TCPPORT))
@@ -342,26 +345,26 @@ void Connect_GetTimestamp(uint8_t retry)
 
         if (retry-- == 0)
         {
-            return;
+            return flag;
         }
     }
 
-    while (Connect_UNIXTime == 0)
-    {
-        sprintf(str, "cmd=7&uid=%s&type=3\r\n", Flash_WiFi_TOKEN);
-        MyClient.println(str);
+    sprintf(str, "cmd=7&uid=%s&type=3\r\n", Flash_WiFi_TOKEN);
+    MyClient.println(str);
 
-        String line = MyClient.readStringUntil('\n');
-        Serial.println(line.c_str());
+    String line = MyClient.readStringUntil('\n');
+    Serial.println(line.c_str());
 
-        p = strstr(line.c_str(), "cmd=");
-        *p = '\0';
+    p = strstr(line.c_str(), "cmd=");
+    *p = '\0';
 
-        Connect_UNIXTime = atoi(line.c_str());
-        Serial.printf("UNIX Convert:%d\n", Connect_UNIXTime);
-    }
+    Connect_UNIXTime = atoi(line.c_str());
+    Serial.printf("UNIX Convert:%d\n", Connect_UNIXTime);
 
     MyClient.stop();
+    flag = 1;
+
+    return flag;
 }
 
 /**
@@ -408,8 +411,9 @@ void Connect_Function(void)
 
         Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0); // 可重试时间5s
 
-        if (Connect_Cloud_Link() == 1)
+        if (Connect_GetTimestamp(3) == 1)
         {
+            RTC_TimeInit(Connect_UNIXTime, 1);
             if (Connect_Cloud_Link() == 1)
             {
                 Connect_CloudLink_Flag = 0;
