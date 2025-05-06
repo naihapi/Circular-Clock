@@ -4,11 +4,12 @@
 #include "WS2812.h"
 
 #ifdef __cplusplus
+#include "Connect.h"
+#include "./RTC.h"
 #include <Adafruit_NeoPixel.h>
 extern "C"
 {
 #endif
-
     void LEDBoard_InitPro(void);
     void LEDBoard_Update(void);
     void LEDBoard_SetPixel(uint8_t x, uint8_t y, WS2812_t color);
@@ -29,6 +30,8 @@ extern "C"
     void LEDBoard_DisplayDay(uint8_t day, uint32_t color);
     void LEDBoard_DisplayPoint(uint32_t color);
     void LEDBoard_DrawImg_Beta(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *img, WS2812_t color);
+    void LEDBoard_Clear(void);
+    void LEDBoard_Function(void);
 
 #ifdef __cplusplus
 }

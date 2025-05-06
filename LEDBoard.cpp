@@ -1,4 +1,6 @@
 #include "LEDBoard.h"
+#include "Connect.h"
+#include "RTC.h"
 
 WS2812_t WSBoard[8][24]; // 灯板缓冲数组
 
@@ -432,6 +434,20 @@ void LEDBoard_DisplayBackGround(uint32_t color)
 }
 
 /**
+ * @brief  清空屏幕
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 关闭所有灯光
+ */
+void LEDBoard_Clear(void)
+{
+    LEDBoard_DisplayBackGround(0x00);
+}
+
+/**
  * @brief  绘制渐变背景色
  *
  * @param colorx 支持4种渐变色彩
@@ -453,4 +469,29 @@ void LEDBoard_DisplayGradualBackGround(uint32_t color1, uint32_t color2, uint32_
 
     LEDBoard_DrawHorizontalLine(0, 6, 23, WS2812_GetColor(color4));
     LEDBoard_DrawHorizontalLine(0, 7, 23, WS2812_GetColor(color4));
+}
+
+/**
+ * @brief LED灯板控制函数
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void LEDBoard_Function(void)
+{
+    if (Connect_UpperControl == 1)
+    {
+    }
+    else if (Connect_UpperControl == 0)
+    {
+        LEDBoard_DisplayGradualBackGround(0xCD00CD, 0x8B0A50, 0x8B0A50, NavyBlue);
+        LEDBoard_DisplayPoint(DarkOrange);
+        LEDBoard_DisplayMonth(RTC_DataBuffer[RTC_DATABUFFER_HOUR], Yellow);
+        LEDBoard_DisplayDay(RTC_DataBuffer[RTC_DATABUFFER_MINUTE], Yellow);
+    }
+
+    LEDBoard_Update();
 }

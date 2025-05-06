@@ -8,7 +8,7 @@ uint8_t RTC_DataBuffer[6];                          // 数据存储(RTC_DATABUFF
  * @brief  外部时钟初始化
  *
  * @param unix 解析时间戳
- * @param update RTC是否更新(0：更新，1：不更新)
+ * @param update RTC是否更新(1：更新，0：不更新)
  *
  * @retval 无
  *

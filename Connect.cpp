@@ -1,10 +1,13 @@
 #include "Connect.h"
 
-Ticker TIM;                    // 定时器对象(用于重置设备)
-Ticker TIM_WiFiCollection;     // 定时器对象(用于WiFi监测)
-uint8_t Connect_KEYCount = 0;  // 按键计数(用于重置设备)
-uint8_t Connect_TIMCount = 0;  // 定时器计数(用于重置设备)
-uint8_t Connect_ResetFlag = 0; // 设备重置标志
+Ticker TIM;                           // 定时器对象(用于重置设备)
+Ticker TIM_WiFiCollection;            // 定时器对象(用于WiFi监测)
+Ticker TIM_UpperComputer;             //  定时器对象(用于与上位机通信)
+uint8_t Connect_KEYCount = 0;         // 按键计数(用于重置设备)
+uint8_t Connect_TIMCount = 0;         // 定时器计数(用于重置设备)
+uint8_t Connect_ResetFlag = 0;        // 设备重置标志
+uint8_t Connect_UpperControl = 0;     // 上位机控制标志(1：上位机控制，0：设备控制)
+uint8_t Connect_UpperControl_Data[5]; //  上位机控制数据(CONNECT_UPPERDATA_xxx)
 
 char Connect_ProductId[] = "CircularClock006"; // 产品ID
 char Connect_DeviceType[] = "006";             // 设备类型(开关设备)
@@ -14,7 +17,7 @@ char Connect_Version[] = "1";                  // 版本号
 WiFiUDP MyUDP;                      // UDP对象
 WiFiClient MyClient;                // 创建WiFi客户端对象
 PubSubClient MyPSC(MyClient);       // 继承客户端对象
-uint8_t Connect_CloudLink_Flag = 0; // 云端连接标志(0：未连接，1：已连接)
+uint8_t Connect_CloudLink_Flag = 0; // 云端连接标志(1：连接正常，0：连接异常)
 char Connect_RecBuffer[255];        // 接收缓冲区
 uint32_t Connect_UNIXTime = 0;      // UNIX时间戳
 uint8_t Connect_State = 0;          // 当前连接状态
@@ -26,7 +29,8 @@ uint8_t Connect_State = 0;          // 当前连接状态
  *
  * @retval 无
  *
- * @note 无
+ * @note 使用WiFi+UDP进行配网
+ * @note
  */
 void Connect_APLink(void)
 {
@@ -226,13 +230,18 @@ void Connect_KEY_Init(void)
  * @param restart_flag 重启标志(1重启，0不重启)
  * @retval 无
  *
- * @note 无
+ * @note 热点模式+WiFi模式 同时打开
  */
 void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out, uint8_t restart_flag)
 {
+    // WiFi连接
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     WiFi.begin(ssid, pwd);
+
+    // 打开热点
+    WiFi.softAP("CircularClock_Config");
+    MyUDP.begin(8266); // 监听8266端口
 
     Serial.printf("WiFi Connecting");
     while (1)
@@ -262,7 +271,7 @@ void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out, uint8_t restart_f
 }
 
 /**
- * @brief 初始化并连接到云平台
+ * @brief 连接到云平台
  *
  * @param 无
  *
@@ -323,7 +332,7 @@ void TIM_WiFiCollection_Handler(void)
  *
  * @retval 返回是否成功(1：成功，0：失败)
  *
- * @note 使用TCP协议获取时间戳(TCP和MQTT协议不能同时使用)
+ * @note 使用TCP协议获取时间戳(TCP和MQTT协议不能同时打开)
  * @note 时间戳获取到Connect_UNIXTime变量中
  */
 uint8_t Connect_GetTimestamp(uint8_t retry)
@@ -367,31 +376,122 @@ uint8_t Connect_GetTimestamp(uint8_t retry)
     return flag;
 }
 
+void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *r, uint8_t *g, uint8_t *b)
+{
+    sscanf(msg, "#%hhu#%hhu#%hhu#%hhu#%hhu", x, y, r, g, b);
+}
+
 /**
- * @brief MQTT云平台数据处理
+ * @brief 解析上位机数据
+ *
+ * @param data 数据包
+ * @note IPAddress IP地址
+ * @note port 端口号
+ *
+ * @retval 解析结果(1：成功，0：失败)
+ *
+ * @note 灯板数据消息体(#x坐标#y坐标#红色值#绿色值#蓝色值)：#x#y#red#green#blue
+ * @note 接收到'upperlink'时，所有灯光关闭，并回复上位机'ok'
+ */
+uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
+{
+    // 上位机连接数据包
+    if (strstr(data, "upperlink") != NULL)
+    {
+        // 标志位置位
+        LEDBoard_Clear();
+        Connect_UpperControl = 1;
+
+        // 回复上位机
+        MyUDP.beginPacket(ip, port);
+        MyUDP.write("ok");
+        MyUDP.endPacket();
+    }
+
+    // 上位机断开数据包
+    if (strstr(data, "upperunlink") != NULL)
+    {
+        // 标志位置位
+        Connect_UpperControl = 0;
+
+        // 回复上位机
+        MyUDP.beginPacket(ip, port);
+        MyUDP.write("ok");
+        MyUDP.endPacket();
+    }
+
+    // 灯板数据包
+    if (strstr(data, "#") != NULL && Connect_UpperControl == 1)
+    {
+        Connect_ParseMsg(data,
+                         &Connect_UpperControl_Data[0],
+                         &Connect_UpperControl_Data[1],
+                         &Connect_UpperControl_Data[2],
+                         &Connect_UpperControl_Data[3],
+                         &Connect_UpperControl_Data[4]);
+
+        char str[128];
+        sprintf(str, "%d %d %d %d %d", Connect_UpperControl_Data[0],
+                Connect_UpperControl_Data[1], Connect_UpperControl_Data[2],
+                Connect_UpperControl_Data[3], Connect_UpperControl_Data[4]);
+
+        MyUDP.beginPacket(ip, port);
+        MyUDP.write(str);
+        MyUDP.endPacket();
+    }
+
+    return 1;
+}
+
+/**
+ * @brief 上位机数据处理函数
  *
  * @param 无
  *
  * @retval 无
  *
- * @note 目前仅需读取时间戳，因此在函数内直接转换
- * @note 由于文档看错了，需要TCP协议才能传输时间戳，但保留此函数
+ * @note 仅有一个功能：举牌绘制
+ * @note
  */
-void Connect_Cloud_Callback(char *topic, byte *payload, unsigned int length)
+void TIM_UpperComputer_Handler(void)
 {
-    // Serial.printf("Rec-Topic:%s\n", topic);
+    char PacketBuffer[255];
+    uint8_t Length = 0;
 
-    // for (unsigned int i = 0; i < length; i++)
-    // {
-    //     Connect_RecBuffer[i] = payload[i];
-    // }
+    // 接收UDP数据包
+    int PackSize = MyUDP.parsePacket();
+    if (PackSize)
+    {
+        IPAddress RemoteIP = MyUDP.remoteIP();
+        uint16_t Port = MyUDP.remotePort();
 
-    // Connect_RecBuffer[length] = '\0';
+        Serial.printf("\nReceived Packet: %d Bytes\n", PackSize);
+        Serial.printf("Remote IP: %s\n", RemoteIP.toString().c_str());
+        Serial.printf("Remote Port: %u\n", Port);
 
-    // Serial.printf("Rec-Data:%s\n", Connect_RecBuffer);
+        // 读取数据内容
+        Length = MyUDP.read(PacketBuffer, 255);
+        if (Length > 0)
+        {
+            PacketBuffer[Length] = '\0';
+        }
 
-    // Connect_UNIXTime = atoi(Connect_RecBuffer);
-    // Serial.printf("Convert-UNIX:%d\n", Connect_UNIXTime);
+        Connect_ParseUpperComputerData(PacketBuffer, RemoteIP, Port);
+    }
+}
+
+/**
+ * @brief 上位机连接初始化
+ *
+ * @param 无
+ *
+ * @retval 无
+ *
+ * @note 上位机为Android软件，通过UDP协议进行通讯
+ */
+void Connect_UpperInit(void)
+{
+    TIM_UpperComputer.attach(0.5, TIM_UpperComputer_Handler);
 }
 
 /**
@@ -401,16 +501,17 @@ void Connect_Cloud_Callback(char *topic, byte *payload, unsigned int length)
  *
  * @retval 无
  *
- * @note 仅在秒数阈值内时，进行重连
+ * @note 仅在秒钟为5~30时间段内，进行重连
  */
 void Connect_Function(void)
 {
-    if (Connect_CloudLink_Flag == 1 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] < 30 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] > 5)
+    if (Connect_CloudLink_Flag == 1 && Connect_UpperControl == 0 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] < 30 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] > 5)
     {
         Serial.printf("WiFi Disconnect,Retry...\n");
 
         Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0); // 可重试时间5s
 
+        // 先用TCP获取时间戳，再转为MQTT连接到云平台
         if (Connect_GetTimestamp(3) == 1)
         {
             RTC_TimeInit(Connect_UNIXTime, 1);
@@ -439,14 +540,10 @@ void Connect_InitPro(void)
         Connect_APLink();
     }
 
-    Connect_KEY_Init(); // 按键初始化
-
+    Connect_KEY_Init();                                           // 重置按键初始化
     Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0); // 连接WiFi
-
-    MyPSC.setCallback(Connect_Cloud_Callback); // 创建接收回调函数
-    Connect_GetTimestamp(3);                   // 获取时间戳
-
-    Connect_Cloud_Link(); // 连接到云平台
-
-    TIM_WiFiCollection.attach(5, TIM_WiFiCollection_Handler);
+    Connect_GetTimestamp(3);                                      // 获取时间戳
+    Connect_Cloud_Link();                                         // 连接到云平台
+    Connect_UpperInit();                                          // 上位机连接初始化
+    TIM_WiFiCollection.attach(5, TIM_WiFiCollection_Handler);     // 打开WiFi状态监测
 }

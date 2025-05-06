@@ -19,11 +19,13 @@
 #define RTC_DATABUFFER_MINUTE 4
 #define RTC_DATABUFFER_SECOND 5
 
+// 变量
+extern uint8_t RTC_DataBuffer[6];
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-    extern uint8_t RTC_DataBuffer[6];
     void RTC_InitPro(void);
     void RTC_Function(void);
     void RTC_TimeInit(time_t unix, uint8_t update);
