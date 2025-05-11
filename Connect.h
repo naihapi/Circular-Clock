@@ -21,9 +21,7 @@
 #define CONNECT_CLOUD_TCPPORT 8344 // 此为TCP端口
 #define CONNECT_UPPERDATA_X 0      // 上位机数据X坐标
 #define CONNECT_UPPERDATA_Y 1      // 上位机数据Y坐标
-#define CONNECT_UPPERDATA_R 2      // 上位机数据R颜色
-#define CONNECT_UPPERDATA_G 3      // 上位机数据G颜色
-#define CONNECT_UPPERDATA_B 4      // 上位机数据B颜色
+#define CONNECT_UPPERDATA_MODE 2   // 上位机数据模式颜色
 
 // 自定义
 #include "LEDBoard.h"

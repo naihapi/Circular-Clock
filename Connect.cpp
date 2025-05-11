@@ -7,7 +7,7 @@ uint8_t Connect_KEYCount = 0;         // 按键计数(用于重置设备)
 uint8_t Connect_TIMCount = 0;         // 定时器计数(用于重置设备)
 uint8_t Connect_ResetFlag = 0;        // 设备重置标志
 uint8_t Connect_UpperControl = 0;     // 上位机控制标志(1：上位机控制，0：设备控制)
-uint8_t Connect_UpperControl_Data[5]; //  上位机控制数据(CONNECT_UPPERDATA_xxx)
+uint8_t Connect_UpperControl_Data[3]; //  上位机控制数据(CONNECT_UPPERDATA_xxx)
 
 char Connect_ProductId[] = "CircularClock006"; // 产品ID
 char Connect_DeviceType[] = "006";             // 设备类型(开关设备)
@@ -235,13 +235,13 @@ void Connect_KEY_Init(void)
 void Connect_WiFiLink(char *ssid, char *pwd, uint8_t time_out, uint8_t restart_flag)
 {
     // WiFi连接
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_AP_STA);
     WiFi.disconnect();
     WiFi.begin(ssid, pwd);
 
     // 打开热点
-    WiFi.softAP("CircularClock_Config");
-    MyUDP.begin(8266); // 监听8266端口
+    WiFi.softAP("CircularClock_Config"); // 热点名称
+    MyUDP.begin(8266);                   // 监听8266端口
 
     Serial.printf("WiFi Connecting");
     while (1)
@@ -376,9 +376,9 @@ uint8_t Connect_GetTimestamp(uint8_t retry)
     return flag;
 }
 
-void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *r, uint8_t *g, uint8_t *b)
+void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *mode)
 {
-    sscanf(msg, "#%hhu#%hhu#%hhu#%hhu#%hhu", x, y, r, g, b);
+    sscanf(msg, "#upperlink#color#%hhu#%hhu#%hhu#", x, y, mode);
 }
 
 /**
@@ -390,13 +390,13 @@ void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *r, uint8_t *g,
  *
  * @retval 解析结果(1：成功，0：失败)
  *
- * @note 灯板数据消息体(#x坐标#y坐标#红色值#绿色值#蓝色值)：#x#y#red#green#blue
+ * @note 灯板数据消息体(#x坐标#y坐标#颜色模式#)：#upperlink#x#y#color_mode#
  * @note 接收到'upperlink'时，所有灯光关闭，并回复上位机'ok'
  */
 uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
 {
     // 上位机连接数据包
-    if (strstr(data, "upperlink") != NULL)
+    if (strstr(data, "upperlink#into") != NULL)
     {
         // 标志位置位
         LEDBoard_Clear();
@@ -409,7 +409,7 @@ uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
     }
 
     // 上位机断开数据包
-    if (strstr(data, "upperunlink") != NULL)
+    if (strstr(data, "upperlink#back") != NULL)
     {
         // 标志位置位
         Connect_UpperControl = 0;
@@ -421,19 +421,16 @@ uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
     }
 
     // 灯板数据包
-    if (strstr(data, "#") != NULL && Connect_UpperControl == 1)
+    if (strstr(data, "upperlink#color") != NULL && Connect_UpperControl == 1)
     {
         Connect_ParseMsg(data,
-                         &Connect_UpperControl_Data[0],
-                         &Connect_UpperControl_Data[1],
-                         &Connect_UpperControl_Data[2],
-                         &Connect_UpperControl_Data[3],
-                         &Connect_UpperControl_Data[4]);
+                         &Connect_UpperControl_Data[CONNECT_UPPERDATA_X],
+                         &Connect_UpperControl_Data[CONNECT_UPPERDATA_Y],
+                         &Connect_UpperControl_Data[CONNECT_UPPERDATA_MODE]);
 
         char str[128];
-        sprintf(str, "%d %d %d %d %d", Connect_UpperControl_Data[0],
-                Connect_UpperControl_Data[1], Connect_UpperControl_Data[2],
-                Connect_UpperControl_Data[3], Connect_UpperControl_Data[4]);
+        sprintf(str, "APP send--%d %d %d", Connect_UpperControl_Data[0],
+                Connect_UpperControl_Data[1], Connect_UpperControl_Data[2]);
 
         MyUDP.beginPacket(ip, port);
         MyUDP.write(str);
@@ -501,11 +498,12 @@ void Connect_UpperInit(void)
  *
  * @retval 无
  *
- * @note 仅在秒钟为5~30时间段内，进行重连
+ * @note 重连条件：秒钟为5~30时间段内、无设备连接、上位机未连接
  */
 void Connect_Function(void)
 {
-    if (Connect_CloudLink_Flag == 1 && Connect_UpperControl == 0 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] < 30 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] > 5)
+    uint8_t connectNum = WiFi.softAPgetStationNum();
+    if (connectNum == 0 && Connect_CloudLink_Flag == 1 && Connect_UpperControl == 0 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] < 30 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] > 5)
     {
         Serial.printf("WiFi Disconnect,Retry...\n");
 
@@ -539,6 +537,10 @@ void Connect_InitPro(void)
     {
         Connect_APLink();
     }
+
+    // 打开热点
+    WiFi.softAP("CircularClock_Config"); // 热点名称
+    MyUDP.begin(8266);                   // 监听8266端口
 
     Connect_KEY_Init();                                           // 重置按键初始化
     Connect_WiFiLink(Flash_WiFi_APSSID, Flash_WiFi_APPWD, 10, 0); // 连接WiFi
