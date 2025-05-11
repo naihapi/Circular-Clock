@@ -27,6 +27,7 @@
 #include "LEDBoard.h"
 #include "Flash.h"
 #include "RTC.h"
+#include "WS2812.h"
 
 #ifdef __cplusplus
 extern "C"

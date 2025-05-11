@@ -63,11 +63,29 @@ void WS2812_SetAllLight(WS2812_t color)
     }
 }
 
+/**
+ * @brief 亮度设置
+ *
+ * @param brightness 颜色
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
 void WS2812_SetBrightness(uint8_t brightness)
 {
     led.setBrightness(brightness);
 }
 
+/**
+ * @brief 颜色类型转换
+ *
+ * @param hex_color 十六进制颜色
+ *
+ * @retval 返回颜色类型
+ *
+ * @note 无
+ */
 WS2812_t WS2812_GetColor(uint32_t hex_color)
 {
     WS2812_t color;

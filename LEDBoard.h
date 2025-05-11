@@ -3,6 +3,12 @@
 #include <Arduino.h>
 #include "WS2812.h"
 
+#define LED_COLOR_UPPERLINK_MODE1 LightYellow
+#define LED_COLOR_UPPERLINK_MODE2 Aquamarine
+#define LED_COLOR_UPPERLINK_MODE3 Pink
+#define LED_COLOR_UPPERLINK_MODE4 Orange
+#define LED_COLOR_UPPERLINK_MODE5 Snow
+
 #ifdef __cplusplus
 #include "Connect.h"
 #include "./RTC.h"

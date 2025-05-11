@@ -394,6 +394,51 @@ void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *mode)
 }
 
 /**
+ * @brief 解析灯光模式
+ *
+ * @param mode 灯光模式
+ *
+ * @retval 返回模式对应的颜色
+ *
+ * @note 无
+ */
+uint32_t Connect_ParseColorMode(uint8_t mode)
+{
+    uint32_t color = 0;
+
+    switch (mode)
+    {
+    case 1:
+    {
+        color = LED_COLOR_UPPERLINK_MODE1;
+    }
+    break;
+    case 2:
+    {
+        color = LED_COLOR_UPPERLINK_MODE2;
+    }
+    break;
+    case 3:
+    {
+        color = LED_COLOR_UPPERLINK_MODE3;
+    }
+    break;
+    case 4:
+    {
+        color = LED_COLOR_UPPERLINK_MODE4;
+    }
+    break;
+    case 5:
+    {
+        color = LED_COLOR_UPPERLINK_MODE5;
+    }
+    break;
+    }
+
+    return color;
+}
+
+/**
  * @brief 解析上位机数据
  *
  * @param data 数据包
@@ -444,9 +489,15 @@ uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
         char str[128];
         sprintf(str, "APP send--%d %d %d", Connect_UpperControl_Data[0],
                 Connect_UpperControl_Data[1], Connect_UpperControl_Data[2]);
+        Serial.printf("%s\n", str);
 
+        LEDBoard_SetPixel(Connect_UpperControl_Data[CONNECT_UPPERDATA_X],
+                          Connect_UpperControl_Data[CONNECT_UPPERDATA_Y],
+                          WS2812_GetColor(Connect_ParseColorMode(Connect_UpperControl_Data[CONNECT_UPPERDATA_MODE])));
+
+        // 回复上位机
         MyUDP.beginPacket(ip, port);
-        MyUDP.write(str);
+        MyUDP.write("ok");
         MyUDP.endPacket();
     }
 

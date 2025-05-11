@@ -484,10 +484,11 @@ void LEDBoard_Function(void)
 {
     if (Connect_UpperControl == 1)
     {
-        Serial.printf("Connect_UpperControl=1\n");
+        // 上位机控制
     }
     else if (Connect_UpperControl == 0)
     {
+        // 正常显示时间
         LEDBoard_DisplayGradualBackGround(0xCD00CD, 0x8B0A50, 0x8B0A50, NavyBlue);
         LEDBoard_DisplayColon(DarkOrange);
         LEDBoard_DisplayMonth(RTC_DataBuffer[RTC_DATABUFFER_HOUR], Yellow);
