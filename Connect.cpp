@@ -376,6 +376,18 @@ uint8_t Connect_GetTimestamp(uint8_t retry)
     return flag;
 }
 
+/**
+ * @brief 解析灯光数据
+ *
+ * @param msg 数据包
+ * @param x x轴坐标
+ * @param y y轴坐标
+ * @param mode 灯光模式
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
 void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *mode)
 {
     sscanf(msg, "#upperlink#color#%hhu#%hhu#%hhu#", x, y, mode);
@@ -385,13 +397,14 @@ void Connect_ParseMsg(char *msg, uint8_t *x, uint8_t *y, uint8_t *mode)
  * @brief 解析上位机数据
  *
  * @param data 数据包
- * @note IPAddress IP地址
- * @note port 端口号
+ * @param IPAddress IP地址
+ * @param port 端口号
  *
  * @retval 解析结果(1：成功，0：失败)
  *
- * @note 灯板数据消息体(#x坐标#y坐标#颜色模式#)：#upperlink#x#y#color_mode#
- * @note 接收到'upperlink'时，所有灯光关闭，并回复上位机'ok'
+ * @note 进入绘制消息体(#upperlink#into)
+ * @note 退出绘制消息体(#upperlink#back)
+ * @note 灯光消息体(#upperlink#color#x坐标#y坐标#颜色模式#)：#upperlink#x#y#color_mode#
  */
 uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
 {
