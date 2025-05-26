@@ -28,6 +28,12 @@ uint8_t LEDBoard_Point[] = {
     0x00, 0x04, 0x00 // '.'
 };
 
+// 灯板等待
+uint8_t LEDBoard_WaitingIMG[] = {
+    0x00, 0x14, 0x40, 0x0A, 0x10, 0x02, 0x20, 0x0A,
+    0x00, 0xE3, 0x95, 0x89, 0x89, 0x95, 0xE3, 0x00,
+    0x10, 0x42, 0x08, 0x20, 0x00, 0x14, 0x22, 0x00};
+
 /**
  * @brief 灯板初始化
  *
@@ -39,11 +45,7 @@ uint8_t LEDBoard_Point[] = {
  */
 void LEDBoard_InitPro(void)
 {
-    LEDBoard_DisplayGradualBackGround(0xCD00CD, 0x8B0A50, 0x8B0A50, NavyBlue);
-    LEDBoard_DisplayPoint(DarkOrange);
-    LEDBoard_DisplayMonth(88, Yellow);
-    LEDBoard_DisplayDay(88, Yellow);
-
+    LEDBoard_DisplayGradualBackGround(Snow, Snow, Snow, Snow);
     LEDBoard_Update();
 }
 
@@ -293,35 +295,63 @@ void LEDBoard_DrawVerticalLine(uint8_t start_x, uint8_t start_y, uint8_t length,
 }
 
 /**
- * @brief  绘制小时
+ * @brief  绘制1个数字
  *
- * @param hour 小时
+ * @param number 数字(0~9)
  * @param color 颜色
  *
  * @retval 无
  *
- * @note 无
+ * @note 在常用的位置1(x0:00)，绘制数字
  */
-void LEDBoard_DisplayHour(uint8_t hour, uint32_t color)
+void LEDBoard_DrawNumber_Normal1(uint8_t number, WS2812_t color)
 {
-    LEDBoard_DrawNumber(3, 1, hour / 10, WS2812_GetColor(color));
-    LEDBoard_DrawNumber(7, 1, hour % 10, WS2812_GetColor(color));
+    LEDBoard_DrawNumber(3, 1, number, color);
 }
 
 /**
- * @brief  绘制分钟
+ * @brief  绘制1个数字
  *
- * @param minute 分钟
+ * @param number 数字(0~9)
  * @param color 颜色
  *
  * @retval 无
  *
- * @note 无
+ * @note 在常用的位置2(0x:00)，绘制数字
  */
-void LEDBoard_DisplayMinute(uint8_t minute, uint32_t color)
+void LEDBoard_DrawNumber_Normal2(uint8_t number, WS2812_t color)
 {
-    LEDBoard_DrawNumber(13, 1, minute / 10, WS2812_GetColor(color));
-    LEDBoard_DrawNumber(17, 1, minute % 10, WS2812_GetColor(color));
+    LEDBoard_DrawNumber(7, 1, number, color);
+}
+
+/**
+ * @brief  绘制1个数字
+ *
+ * @param number 数字(0~9)
+ * @param color 颜色
+ *
+ * @retval 无
+ *
+ * @note 在常用的位置3(00:x0)，绘制数字
+ */
+void LEDBoard_DrawNumber_Normal3(uint8_t number, WS2812_t color)
+{
+    LEDBoard_DrawNumber(13, 1, number, color);
+}
+
+/**
+ * @brief  绘制1个数字
+ *
+ * @param number 数字(0~9)
+ * @param color 颜色
+ *
+ * @retval 无
+ *
+ * @note 在常用的位置1(00:0x)，绘制数字
+ */
+void LEDBoard_DrawNumber_Normal4(uint8_t number, WS2812_t color)
+{
+    LEDBoard_DrawNumber(17, 1, number, color);
 }
 
 /**
@@ -339,35 +369,26 @@ void LEDBoard_DisplayColon(uint32_t color)
 }
 
 /**
- * @brief  绘制月份
+ * @brief  绘制时间
  *
- * @param month 月份数
- * @param color 颜色
+ * @param hour 小时
+ * @param minute 分钟
+ * @param time_color 时间颜色
+ * @param colon_color 冒号颜色
  *
  * @retval 无
  *
  * @note 无
  */
-void LEDBoard_DisplayMonth(uint8_t month, uint32_t color)
+void LEDBoard_DisplayTime(uint8_t hour, uint8_t minute, uint32_t time_color, uint32_t colon_color)
 {
-    LEDBoard_DrawNumber(3, 1, month / 10, WS2812_GetColor(color));
-    LEDBoard_DrawNumber(7, 1, month % 10, WS2812_GetColor(color));
-}
+    LEDBoard_DrawNumber_Normal1(hour / 10, WS2812_GetColor(time_color));
+    LEDBoard_DrawNumber_Normal2(hour % 10, WS2812_GetColor(time_color));
 
-/**
- * @brief  绘制日期
- *
- * @param day 天数
- * @param color 颜色
- *
- * @retval 无
- *
- * @note 无
- */
-void LEDBoard_DisplayDay(uint8_t day, uint32_t color)
-{
-    LEDBoard_DrawNumber(13, 1, day / 10, WS2812_GetColor(color));
-    LEDBoard_DrawNumber(17, 1, day % 10, WS2812_GetColor(color));
+    LEDBoard_DisplayColon(colon_color);
+
+    LEDBoard_DrawNumber_Normal3(minute / 10, WS2812_GetColor(time_color));
+    LEDBoard_DrawNumber_Normal4(minute % 10, WS2812_GetColor(time_color));
 }
 
 /**
@@ -382,6 +403,29 @@ void LEDBoard_DisplayDay(uint8_t day, uint32_t color)
 void LEDBoard_DisplayPoint(uint32_t color)
 {
     LEDBoard_DrawImg(10, 1, 3, 5, LEDBoard_Point, WS2812_GetColor(color));
+}
+
+/**
+ * @brief  绘制日期
+ *
+ * @param month 月份
+ * @param day 日份
+ * @param date_color 日期颜色
+ * @param time_color 时间颜色
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void LEDBoard_DisplayDate(uint8_t month, uint8_t day, uint32_t date_color, uint32_t point_color)
+{
+    LEDBoard_DrawNumber_Normal1(month / 10, WS2812_GetColor(date_color));
+    LEDBoard_DrawNumber_Normal2(month % 10, WS2812_GetColor(date_color));
+
+    LEDBoard_DisplayPoint(point_color);
+
+    LEDBoard_DrawNumber_Normal3(day / 10, WS2812_GetColor(date_color));
+    LEDBoard_DrawNumber_Normal4(day % 10, WS2812_GetColor(date_color));
 }
 
 /**
@@ -423,7 +467,7 @@ void LEDBoard_DisplayVerticalBar2(float now, float max, uint32_t color)
  *
  * @retval 无
  *
- * @note 需要在显示文字之前调用
+ * @note 需要在显示内容之前调用
  */
 void LEDBoard_DisplayBackGround(uint32_t color)
 {
@@ -445,6 +489,22 @@ void LEDBoard_DisplayBackGround(uint32_t color)
 void LEDBoard_Clear(void)
 {
     LEDBoard_DisplayBackGround(0x00);
+}
+
+/**
+ * @brief 显示等待界面
+ *
+ * @param wait_color 等待图标颜色
+ * @param background_color 背景颜色
+ *
+ * @retval 无
+ *
+ * @note 无
+ */
+void LEDBoard_DisplayWaiting(uint32_t wait_color, uint32_t background_color)
+{
+    LEDBoard_DisplayBackGround(background_color);
+    LEDBoard_DrawImg(0, 0, 27, 3, LEDBoard_WaitingIMG, WS2812_GetColor(wait_color));
 }
 
 /**
@@ -489,10 +549,8 @@ void LEDBoard_Function(void)
     else if (Connect_UpperControl == 0)
     {
         // 正常显示时间
-        LEDBoard_DisplayGradualBackGround(0xCD00CD, 0x8B0A50, 0x8B0A50, NavyBlue);
-        LEDBoard_DisplayColon(DarkOrange);
-        LEDBoard_DisplayMonth(RTC_DataBuffer[RTC_DATABUFFER_HOUR], Yellow);
-        LEDBoard_DisplayDay(RTC_DataBuffer[RTC_DATABUFFER_MINUTE], Yellow);
+        LEDBoard_DisplayGradualBackGround(0xCD1FCD, 0x8B0A50, 0xFF0A50, NavyBlue);
+        LEDBoard_DisplayTime(RTC_DataBuffer[RTC_DATABUFFER_HOUR], RTC_DataBuffer[RTC_DATABUFFER_MINUTE], Yellow, Yellow);
     }
 
     LEDBoard_Update();

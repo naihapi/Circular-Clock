@@ -28,12 +28,8 @@ extern "C"
     void LEDBoard_DisplayVerticalBar1(float now, float max, uint32_t color);
     void LEDBoard_DisplayVerticalBar2(float now, float max, uint32_t color);
     void LEDBoard_DisplayColon(uint32_t color);
-    void LEDBoard_DisplayHour(uint8_t hour, uint32_t color);
-    void LEDBoard_DisplayMinute(uint8_t minute, uint32_t color);
     void LEDBoard_DisplayBackGround(uint32_t color);
     void LEDBoard_DisplayGradualBackGround(uint32_t color1, uint32_t color2, uint32_t color3, uint32_t color4);
-    void LEDBoard_DisplayMonth(uint8_t month, uint32_t color);
-    void LEDBoard_DisplayDay(uint8_t day, uint32_t color);
     void LEDBoard_DisplayPoint(uint32_t color);
     void LEDBoard_DrawImg_Beta(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *img, WS2812_t color);
     void LEDBoard_Clear(void);
