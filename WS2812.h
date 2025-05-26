@@ -154,6 +154,8 @@ typedef struct WS2812_t
     uint8_t Blue;
 } WS2812_t;
 
+#include "LEDBoard.h"
+
 #ifdef __cplusplus
 #include <Adafruit_NeoPixel.h>
 extern "C"

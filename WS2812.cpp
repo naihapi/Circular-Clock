@@ -109,6 +109,9 @@ WS2812_t WS2812_GetColor(uint32_t hex_color)
 void WS2812_InitPro(void)
 {
     led.begin();
-    WS2812_SetBrightness(10);
+    WS2812_SetBrightness(5);
     WS2812_GPIO_Init();
+
+    LEDBoard_DisplayWaiting(Snow, Black);
+    LEDBoard_Update();
 }

@@ -30,9 +30,9 @@ uint8_t LEDBoard_Point[] = {
 
 // 灯板等待
 uint8_t LEDBoard_WaitingIMG[] = {
-    0x00, 0x14, 0x40, 0x0A, 0x10, 0x02, 0x20, 0x0A,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0xE3, 0x95, 0x89, 0x89, 0x95, 0xE3, 0x00,
-    0x10, 0x42, 0x08, 0x20, 0x00, 0x14, 0x22, 0x00};
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /**
  * @brief 灯板初始化
@@ -52,24 +52,42 @@ void LEDBoard_InitPro(void)
 /**
  * @brief 将数组载入到库函数中
  *
- * @param 无
+ * @param direction 方向(1：左侧 0：右侧)
  *
  * @retval 无
  *
- * @note 无
+ * @note 左侧：充电口和按钮靠左
+ * @note 右侧：充电口和按钮靠右
  */
-void LEDBoard_ColorLoad(void)
+void LEDBoard_ColorLoad(uint8_t direction)
 {
     uint8_t num = 0;
 
-    for (uint8_t col = 0; col <= 16; col += 8)
+    if (direction)
     {
-        for (uint8_t i = 0; i < 8; i++)
+        for (int8_t col = 16; col >= 0; col -= 8)
         {
-            for (uint8_t j = 0; j < 8; j++)
+            for (int8_t i = 7; i >= 0; i--)
             {
-                WS2812_SetOneLight(num, WSBoard[i][j + col]);
-                num += 1;
+                for (int8_t j = 7; j >= 0; j--)
+                {
+                    WS2812_SetOneLight(num, WSBoard[i][j + col]);
+                    num += 1;
+                }
+            }
+        }
+    }
+    else
+    {
+        for (uint8_t col = 0; col <= 16; col += 8)
+        {
+            for (uint8_t i = 0; i < 8; i++)
+            {
+                for (uint8_t j = 0; j < 8; j++)
+                {
+                    WS2812_SetOneLight(num, WSBoard[i][j + col]);
+                    num += 1;
+                }
             }
         }
     }
@@ -86,7 +104,7 @@ void LEDBoard_ColorLoad(void)
  */
 void LEDBoard_Update(void)
 {
-    LEDBoard_ColorLoad();
+    LEDBoard_ColorLoad(1);
     WS2812_Update();
 }
 
@@ -526,8 +544,8 @@ void LEDBoard_DisplayGradualBackGround(uint32_t color1, uint32_t color2, uint32_
 
     LEDBoard_DrawHorizontalLine(0, 4, 23, WS2812_GetColor(color3));
     LEDBoard_DrawHorizontalLine(0, 5, 23, WS2812_GetColor(color3));
+    LEDBoard_DrawHorizontalLine(0, 6, 23, WS2812_GetColor(color3));
 
-    LEDBoard_DrawHorizontalLine(0, 6, 23, WS2812_GetColor(color4));
     LEDBoard_DrawHorizontalLine(0, 7, 23, WS2812_GetColor(color4));
 }
 
@@ -549,7 +567,7 @@ void LEDBoard_Function(void)
     else if (Connect_UpperControl == 0)
     {
         // 正常显示时间
-        LEDBoard_DisplayGradualBackGround(0xCD1FCD, 0x8B0A50, 0xFF0A50, NavyBlue);
+        LEDBoard_DisplayGradualBackGround(0xCD00CD, 0xFF1493, 0x7323C2, 0x0C0CBA);
         LEDBoard_DisplayTime(RTC_DataBuffer[RTC_DATABUFFER_HOUR], RTC_DataBuffer[RTC_DATABUFFER_MINUTE], Yellow, Yellow);
     }
 

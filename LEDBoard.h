@@ -34,6 +34,7 @@ extern "C"
     void LEDBoard_DrawImg_Beta(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *img, WS2812_t color);
     void LEDBoard_Clear(void);
     void LEDBoard_Function(void);
+    void LEDBoard_DisplayWaiting(uint32_t wait_color, uint32_t background_color);
 
 #ifdef __cplusplus
 }
