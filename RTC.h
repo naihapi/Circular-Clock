@@ -9,9 +9,9 @@
 #include "Connect.h"
 
 // 宏定义
-#define RTC_PIN_SCL D3
-#define RTC_PIN_SDA D4
-#define RTC_PIN_CE D5
+#define RTC_PIN_SCL D3 // io0
+#define RTC_PIN_SDA D4 // io2
+#define RTC_PIN_CE D5  // io14
 #define RTC_DATABUFFER_YEAR 0
 #define RTC_DATABUFFER_MONTH 1
 #define RTC_DATABUFFER_DAY 2

@@ -227,7 +227,7 @@ void Connect_KEY_Init(void)
  * @param ssid 名称
  * @param pwd 密码
  * @param time_out 超时次数(500ms/次)
- * @param restart_flag 重启标志(1重启，0不重启)
+ * @param restart_flag 超时重启(1重启，0不重启)
  * @retval 无
  *
  * @note 热点模式+WiFi模式 同时打开
@@ -341,11 +341,13 @@ uint8_t Connect_GetTimestamp(uint8_t retry)
     char *p;
     uint8_t flag = 0;
 
+    // TCP连接
     while (1)
     {
         if (MyClient.connect(CONNECT_CLOUD_URL, CONNECT_CLOUD_TCPPORT))
         {
             Serial.printf("TCP Connect Success\n");
+            Connect_State = 1;
             break;
         }
 
