@@ -4,6 +4,7 @@ uint8_t Flash_ConfigState = 0;            // 0:未配置，1:配置完成
 char Flash_WiFi_APSSID[32] = "WiFi-NAME"; // WiFi名称
 char Flash_WiFi_APPWD[32] = "WiFi-PWD";   // WiFi密码
 char Flash_WiFi_TOKEN[64] = "TOKEN";      // 用户密钥
+uint8_t Flash_StyleDial = 1;              // 当前表盘样式
 
 /**
  * @brief 从闪存中取出数据
@@ -32,6 +33,8 @@ void Flash_Load(void)
     {
         Flash_WiFi_TOKEN[i] = EEPROM.read(FLASH_ADDR_WIFI_TOKEN + i);
     }
+
+    Flash_StyleDial = EEPROM.read(FLASH_ADDR_STYLEDIAL_CNT);
 }
 
 /**
@@ -62,6 +65,8 @@ void Flash_Update(void)
         EEPROM.write(FLASH_ADDR_WIFI_TOKEN + i, Flash_WiFi_TOKEN[i]);
     }
 
+    EEPROM.write(FLASH_ADDR_STYLEDIAL_CNT, Flash_StyleDial);
+
     EEPROM.commit();
 }
 
@@ -81,5 +86,5 @@ void Flash_InitPro(void)
     // Flash_Update();
     Flash_Load();
 
-    Serial.printf("%d %s %s %s\n", Flash_ConfigState, Flash_WiFi_APSSID, Flash_WiFi_APPWD, Flash_WiFi_TOKEN);
+    Serial.printf("%d %s %s %s %d\n", Flash_ConfigState, Flash_WiFi_APSSID, Flash_WiFi_APPWD, Flash_WiFi_TOKEN, Flash_StyleDial);
 }

@@ -109,7 +109,8 @@ void Connect_APLink(void)
                 Serial.println("AP Link Finished!");
 
                 // 置位并更新Flash
-                Flash_ConfigState = 1;
+                Flash_StyleDial = 1;//默认表盘
+                Flash_ConfigState = 1;//配置状态
                 Flash_Update();
 
                 return;
@@ -207,7 +208,7 @@ IRAM_ATTR void D1_INTHandler()
 }
 
 /**
- * @brief 按键初始化
+ * @brief 重置按键初始化
  *
  * @param 无
  *
@@ -473,6 +474,31 @@ uint8_t Connect_ParseUpperComputerData(char *data, IPAddress ip, uint16_t port)
     {
         // 标志位置位
         Connect_UpperControl = 0;
+
+        // 回复上位机
+        MyUDP.beginPacket(ip, port);
+        MyUDP.write("ok");
+        MyUDP.endPacket();
+    }
+
+    // 上位机连接数据包
+    if (strstr(data, "upperlink#into") != NULL)
+    {
+        // 标志位置位
+        LEDBoard_Clear();
+        Connect_UpperControl = 1;
+
+        // 回复上位机
+        MyUDP.beginPacket(ip, port);
+        MyUDP.write("ok");
+        MyUDP.endPacket();
+    }
+
+    // 清空屏幕
+    if (strstr(data, "upperlink#clear") != NULL)
+    {
+        // 标志位置位
+        LEDBoard_Clear();
 
         // 回复上位机
         MyUDP.beginPacket(ip, port);

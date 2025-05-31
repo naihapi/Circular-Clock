@@ -2,11 +2,12 @@
 
 #include <Arduino.h>
 #include "WS2812.h"
+#include "Style.h"
 
-#define LED_COLOR_UPPERLINK_MODE1 LightYellow
-#define LED_COLOR_UPPERLINK_MODE2 Aquamarine
-#define LED_COLOR_UPPERLINK_MODE3 Pink
-#define LED_COLOR_UPPERLINK_MODE4 Orange
+#define LED_COLOR_UPPERLINK_MODE1 Orange
+#define LED_COLOR_UPPERLINK_MODE2 DarkGreen
+#define LED_COLOR_UPPERLINK_MODE3 DeepPink
+#define LED_COLOR_UPPERLINK_MODE4 OrangeRed
 #define LED_COLOR_UPPERLINK_MODE5 Snow
 
 #ifdef __cplusplus
@@ -35,6 +36,7 @@ extern "C"
     void LEDBoard_Clear(void);
     void LEDBoard_Function(void);
     void LEDBoard_DisplayWaiting(uint32_t wait_color, uint32_t background_color);
+    void LEDBoard_DisplayTime(uint8_t hour, uint8_t minute, uint32_t time_color, uint32_t colon_color);
 
 #ifdef __cplusplus
 }

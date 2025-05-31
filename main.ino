@@ -7,6 +7,7 @@ void setup()
     WS2812_InitPro();
     Connect_InitPro();
     RTC_InitPro();
+    Style_InitPro();
 }
 
 void loop()

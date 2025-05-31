@@ -567,8 +567,7 @@ void LEDBoard_Function(void)
     else if (Connect_UpperControl == 0)
     {
         // 正常显示时间
-        LEDBoard_DisplayGradualBackGround(0xCD00CD, 0xFF1493, 0x7323C2, 0x0C0CBA);
-        LEDBoard_DisplayTime(RTC_DataBuffer[RTC_DATABUFFER_HOUR], RTC_DataBuffer[RTC_DATABUFFER_MINUTE], Yellow, Yellow);
+        Style_ShowDial();
     }
 
     LEDBoard_Update();

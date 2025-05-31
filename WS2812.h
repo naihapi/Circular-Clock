@@ -1,6 +1,8 @@
 #pragma once
 
+// 官方库
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
 
 // 引脚和灯珠数量
 #define WS2812_PIN D2
@@ -154,10 +156,10 @@ typedef struct WS2812_t
     uint8_t Blue;
 } WS2812_t;
 
+// 自定义库
 #include "LEDBoard.h"
 
 #ifdef __cplusplus
-#include <Adafruit_NeoPixel.h>
 extern "C"
 {
 #endif
