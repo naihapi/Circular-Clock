@@ -109,8 +109,8 @@ void Connect_APLink(void)
                 Serial.println("AP Link Finished!");
 
                 // 置位并更新Flash
-                Flash_StyleDial = 1;//默认表盘
-                Flash_ConfigState = 1;//配置状态
+                Flash_StyleDial = 1;   // 默认表盘
+                Flash_ConfigState = 1; // 配置状态
                 Flash_Update();
 
                 return;
@@ -595,6 +595,7 @@ void Connect_UpperInit(void)
 void Connect_Function(void)
 {
     uint8_t connectNum = WiFi.softAPgetStationNum();
+    Serial.printf("connectNum=%d,Connect_CloudLink_Flag= %d,Connect_UpperControl= %d\n", connectNum, Connect_CloudLink_Flag, Connect_UpperControl);
     if (connectNum == 0 && Connect_CloudLink_Flag == 1 && Connect_UpperControl == 0 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] < 30 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] > 5)
     {
         Serial.printf("WiFi Disconnect,Retry...\n");

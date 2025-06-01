@@ -59,7 +59,7 @@
 #define DodgerBlue 0x1E90FF           // 道奇蓝
 #define DeepSkyBlue 0x00BFFF          // 深天蓝
 #define SkyBlue 0x87CEEB              // 天蓝
-#define LightSkyBlue 0x87CEFA         // 亮天蓝
+#define LightSkyBlue 0x57BCFA         // 亮天蓝
 #define SteelBlue 0x4682B4            // 钢蓝
 #define LightSteelBlue 0xB0C4DE       // 亮钢蓝
 #define LightBlue 0xADD8E6            // 亮蓝

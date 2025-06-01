@@ -22,14 +22,20 @@ IRAM_ATTR void D6_INTHandler()
 {
     if (!digitalRead(STYLE_Pin))
     {
-        for (uint8_t i = 0; i < 255; i++)
+        for (uint16_t i = 0; i < 500; i++)
         {
-        };
+        }
         if (!digitalRead(STYLE_Pin))
         {
-            Style_ConutFunction();
-            Flash_Update();
-            Serial.printf("Device-MODE:%d\n", Flash_StyleDial);
+            for (uint8_t i = 0; i < 255; i++)
+            {
+            };
+            if (!digitalRead(STYLE_Pin))
+            {
+                Style_ConutFunction();
+                Flash_Update();
+                Serial.printf("Device-MODE:%d\n", Flash_StyleDial);
+            }
         }
     }
 }
@@ -86,12 +92,12 @@ void Style_ShowDial3(void)
  *
  * @retval 无
  *
- * @note 粉色时间深蓝底条
+ * @note 绿色时间白色底条
  */
 void Style_ShowDial4(void)
 {
-    LEDBoard_DisplayGradualBackGround(0, 0, 0, White);
-    LEDBoard_DisplayTime(RTC_DataBuffer[RTC_DATABUFFER_HOUR], RTC_DataBuffer[RTC_DATABUFFER_MINUTE], 0xCD00CD, 0xCD00CD);
+    LEDBoard_DisplayGradualBackGround(0, 0, 0, LawnGreen);
+    LEDBoard_DisplayTime(RTC_DataBuffer[RTC_DATABUFFER_HOUR], RTC_DataBuffer[RTC_DATABUFFER_MINUTE], LightSkyBlue, LightSkyBlue);
 }
 
 /**
