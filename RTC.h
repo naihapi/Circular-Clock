@@ -4,6 +4,7 @@
 // 官方库
 #include <Arduino.h>
 #include <Ds1302.h>
+#include <ESP8266WiFi.h>
 
 // 自定义库
 #include "Connect.h"
@@ -21,6 +22,7 @@
 
 // 变量
 extern uint8_t RTC_DataBuffer[6];
+extern uint8_t RTC_Night_Flag;
 
 #ifdef __cplusplus
 extern "C"

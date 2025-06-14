@@ -135,6 +135,7 @@ void RTC_TimeInit(time_t unix, uint8_t update)
  * @retval 无
  *
  * @note 不能连续运行此函数，建议1s运行一次
+ * @note 午夜0:59:55，将重启时钟 确保时间时钟稳定性
  */
 void RTC_Function(void)
 {
@@ -153,6 +154,12 @@ void RTC_Function(void)
 
         Serial.printf("Date:%d-%d-%d\n", RTC_DataBuffer[0], RTC_DataBuffer[1], RTC_DataBuffer[2]);
         Serial.printf("Time:%02d-%d-%d\n", RTC_DataBuffer[3], RTC_DataBuffer[4], RTC_DataBuffer[5]);
+    }
+
+    if (RTC_DataBuffer[RTC_DATABUFFER_HOUR] == 0 && RTC_DataBuffer[RTC_DATABUFFER_MINUTE] == 59 && RTC_DataBuffer[RTC_DATABUFFER_SECOND] == 55)
+    {
+        Serial.printf("--0:59:55-- -> --restart--\n");
+        ESP.restart();
     }
 }
 
